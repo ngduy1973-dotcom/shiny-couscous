@@ -44,7 +44,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - your-email@example.com         # ← đổi thành email của bạn để nhận thông báo
+          - Ngduy1973@gmail.com        # ← đổi thành email của bạn để nhận thông báo
         notify:
           success: true
           failure: true
