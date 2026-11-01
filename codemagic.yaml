@@ -1,33 +1,30 @@
 workflows:
-  version: 2
-  build-ios:
-    name: Build iOS IPA (TinNhan)
+  build-ipa:
+    name: Build IPA TinNhan
+    instance_type: mac_mini_m1
+    max_build_duration: 30
     environment:
-      xcode: 15.0
-      xcconfig:
-        BUNDLE_ID: com.tinnhan.webapp
+      xcode: latest
     scripts:
-      - name: Cài XcodeGen
-        script: |
-          brew install xcodegen
-      - name: Tạo project từ project.yml
-        script: |
-          xcodegen generate
-      - name: Build không ký tên
+      - name: Install XcodeGen
+        script: brew install xcodegen
+      - name: Generate Xcode project
+        script: xcodegen generate
+      - name: Build without signing
         script: |
           xcodebuild \
+            -project TinNhanWebApp.xcodeproj \
             -scheme TinNhanWebApp \
             -configuration Release \
-            -sdk iphoneos \
-            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            clean build
-      - name: Đóng gói thành .ipa
+            build
+      - name: Package IPA
         script: |
           mkdir -p Payload
-          cp -r build/Release-iphoneos/TinNhanWebApp.app Payload/
+          cp -r build/Build/Products/Release-iphoneos/TinNhanWebApp.app Payload/
           zip -r TinNhan.ipa Payload
     artifacts:
-      - build/TinNhan.ipa
+      - TinNhan.ipa
