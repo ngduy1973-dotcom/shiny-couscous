@@ -1,0 +1,44 @@
+# ============================================================
+#  project.yml — XcodeGen: tự sinh file .xcodeproj trên máy build
+#  (không cần tạo project bằng tay trên Mac)
+#  XcodeGen được cài sẵn trên máy build macOS của Codemagic.
+# ============================================================
+name: TinNhanWebApp
+options:
+  bundleIdPrefix: com.tinnhan
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+settings:
+  base:
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_BITCODE: NO
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1"   # chỉ iPhone
+targets:
+  TinNhanWebApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: TinNhanWebApp/TinNhanWebApp.swift
+      - path: TinNhanWebApp/ContentView.swift
+      - path: TinNhanWebApp/WebView.swift
+      - path: TinNhanWebApp/Web          # thư mục chứa index.html (bundle as resource)
+        type: folder
+    info:
+      path: TinNhanWebApp/Info.plist
+      properties:
+        CFBundleDisplayName: TinNhan
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tinnhan.webapp
+        # Tự sinh launch screen & scene manifest (không cần file .storyboard)
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIStatusBarHidden: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
