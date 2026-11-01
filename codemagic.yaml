@@ -1,0 +1,74 @@
+# ============================================================
+#  codemagic.yaml — Build iOS .ipa trên Codemagic (không cần Mac)
+#  Đặt file này ở GỐC (root) của GitHub/GitLab/Bitbucket repo.
+#  Free tier: 500 phút build/tháng.
+# ============================================================
+workflows:
+  ios-ipa:
+    name: Build iOS IPA (TinNhan)
+    instance_type: mac_mini_m1            # máy build macOS M1 (nhanh, rẻ phút)
+    max_build_duration: 30
+    environment:
+      ios_signing:
+        # Nếu có tài khoản Apple Developer ($99/năm): dùng "app_store" hoặc "ad_hoc"
+        # Nếu chỉ có Apple ID miễn phí: dùng "development" (cài được qua Sideloadly/AltStore)
+        distribution_type: development
+        bundle_identifier: com.tinnhan.webapp
+      vars:
+        XCODE_PROJECT: "TinNhanWebApp.xcodeproj"
+        XCODE_SCHEME: "TinNhanWebApp"
+        # BƯỚC BẮT BUỘC: tạo app-specific password tại appleid.apple.com
+        # rồi lưu vào Codemagic (Team > Integrations > Developer Portal)
+        # hoặc thêm biến môi trường APP_STORE_CONNECT_* trong Codemagic UI.
+    scripts:
+      - name: Sinh Xcode project bằng XcodeGen
+        script: |
+          brew install xcodegen 2>/dev/null || true
+          xcodegen generate
+          echo "--- Đã sinh $XCODE_PROJECT ---"
+          ls -la "$XCODE_PROJECT"
+
+      - name: Thiết lập code signing (chứng chỉ + provisioning profile)
+        script: |
+          xcode-project use-profiles
+
+      - name: Build file .ipa
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa                # ← file .ipa xuất ra tại đây
+
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com         # ← đổi thành email của bạn để nhận thông báo
+        notify:
+          success: true
+          failure: true
+
+# ============================================================
+#  TUYỆT ĐỐI KHÔNG CÓ MAC / KHÔNG MUỐN KÝ TÊN?
+#  Thay 3 script trên bằng block này để build KHÔNG ký tên,
+#  sau đó dùng Sideloudly (Windows/Mac) tự ký + cài bằng Apple ID miễn phí:
+#
+#    scripts:
+#      - name: Sinh project & build (không ký tên)
+#        script: |
+#          brew install xcodegen 2>/dev/null || true
+#          xcodegen generate
+#          xcodebuild -project TinNhanWebApp.xcodeproj \
+#            -scheme TinNhanWebApp \
+#            -configuration Release \
+#            -derivedDataPath build \
+#            CODE_SIGNING_ALLOWED=NO \
+#            CODE_SIGNING_REQUIRED=NO \
+#            CODE_SIGN_IDENTITY="" \
+#            build
+#          mkdir -p Payload && cp -r build/Build/Products/Release-iphoneos/TinNhanWebApp.app Payload/
+#          zip -r TinNhanWebApp-unsigned.ipa Payload
+#    artifacts:
+#      - "*.ipa"
+# ============================================================
